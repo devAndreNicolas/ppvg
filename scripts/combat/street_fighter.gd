@@ -25,6 +25,14 @@ var combo := 0
 var combo_timer := 0.0
 var glow := 0.0
 var duplicate_phase := 0.0
+var visual: AnimatedSprite2D
+var visual_state: StringName = &""
+
+func _ready() -> void:
+	visual = get_node_or_null("Visual") as AnimatedSprite2D
+	if visual != null:
+		visual.sprite_frames = SpriteLibrary.player()
+		_set_visual(&"idle")
 
 func reset_for_show() -> void:
 	reader = ComboReader.new()
@@ -54,6 +62,7 @@ func tick(delta: float) -> void:
 		dodge_timer -= delta
 		position += dodge_direction * DODGE_SPEED * delta
 		_clamp_to_arena()
+		_sync_visual()
 		queue_redraw()
 		return
 	_update_attack(delta)
@@ -64,7 +73,31 @@ func tick(delta: float) -> void:
 	velocity = velocity.move_toward(movement * speed, WALK_SPEED * 8.0 * delta)
 	position += velocity * delta
 	_clamp_to_arena()
+	_sync_visual()
 	queue_redraw()
+
+func _sync_visual() -> void:
+	if visual == null:
+		return
+	visual.flip_h = facing < 0.0
+	if hit_timer > 0.0:
+		visual.modulate = Color("ff8bc9")
+	else:
+		visual.modulate = Color.WHITE
+	if dodge_timer > 0.0:
+		_set_visual(&"dodge")
+	elif attack_timer > 0.0:
+		_set_visual(&"attack")
+	elif velocity.length_squared() > 900.0:
+		_set_visual(&"walk")
+	else:
+		_set_visual(&"idle")
+
+func _set_visual(next_state: StringName) -> void:
+	if visual == null or visual_state == next_state:
+		return
+	visual_state = next_state
+	visual.play(next_state)
 
 func handle_input(event: InputEvent, timing: float, song_time: float, crowd: float) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -171,19 +204,15 @@ func public_is_guarded() -> bool:
 	return abilities.public_guarded()
 
 func _draw() -> void:
-	var body_color := Color("e9e8ff") if hit_timer <= 0.0 else Color("ff3bac")
 	var outline := Color("35e6ff").lerp(Color("ff3bac"), glow)
 	if abilities.duplo_time > 0.0:
 		var ghost_offset := Vector2(sin(duplicate_phase) * 28.0, 3.0)
-		draw_circle(Vector2(0, -56) + ghost_offset, 24, Color("8d7dff", 0.38))
-		draw_rect(Rect2(Vector2(-25, -30) + ghost_offset, Vector2(50, 67)), Color("8d7dff", 0.28), true)
-	draw_circle(Vector2(0, -56), 24, body_color)
-	draw_rect(Rect2(-25, -30, 50, 67), Color("11152e"), true)
-	draw_line(Vector2(-18, 35), Vector2(-27, 77), outline, 10.0)
-	draw_line(Vector2(18, 35), Vector2(27, 77), outline, 10.0)
-	draw_line(Vector2(-24, -15), Vector2(-48 * facing, 5), outline, 11.0)
-	draw_line(Vector2(24, -15), Vector2(48 * facing, 5), outline, 11.0)
-	draw_arc(Vector2.ZERO, 48, 0.0, TAU, 24, outline, 2.0)
+		if visual != null and visual.sprite_frames != null:
+			draw_set_transform(ghost_offset, 0.0, Vector2.ONE)
+			var ghost_texture := visual.sprite_frames.get_frame_texture(visual.animation, visual.frame)
+			if ghost_texture != null:
+				draw_texture_rect(ghost_texture, Rect2(-81, -195, 162, 215), false, Color("8d7dff", 0.26))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if attack_timer > 0.0:
 		draw_arc(Vector2(42 * facing, -10), float(attack.area), -0.9, 0.9, 16, Color(attack.color, 0.60), 7.0)
 	if abilities.grave_time > 0.0:

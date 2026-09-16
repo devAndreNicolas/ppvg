@@ -1,21 +1,28 @@
 class_name StreetBackdrop
 extends Node2D
 
+const FAR := preload("res://assets/background/bg_far.jpg")
+const MID := preload("res://assets/background/bg_mid.png")
+const NEAR := preload("res://assets/background/bg_near.png")
+
 var act_color := Color("35e6ff")
+var elapsed := 0.0
+var redraw_clock := 0.0
+
+func _process(delta: float) -> void:
+	elapsed += delta
+	redraw_clock += delta
+	if redraw_clock >= 0.05:
+		redraw_clock = 0.0
+		queue_redraw()
 
 func set_act_color(next_color: Color) -> void:
-	if act_color.is_equal_approx(next_color):
-		return
 	act_color = next_color
-	queue_redraw()
 
 func _draw() -> void:
-	draw_rect(Rect2(0, 0, 1920, 1080), Color("080812"), true)
-	draw_rect(Rect2(0, 0, 1920, 420), Color("111027"), true)
-	for x in range(90, 1920, 135):
-		var building_height := 120 + int(absf(sin(float(x) * 0.07)) * 180.0)
-		draw_rect(Rect2(x, 420 - building_height, 78, building_height), Color("17143a"), true)
-		draw_line(Vector2(x + 12, 400 - building_height), Vector2(x + 62, 400 - building_height), act_color, 2.0)
-	draw_rect(Rect2(0, 690, 1920, 390), Color("15152a"), true)
-	for y in range(710, 1080, 72):
-		draw_line(Vector2(0, y), Vector2(1920, y), Color("27244a"), 2.0)
+	var far_shift := sin(elapsed * 0.16) * 8.0
+	var mid_shift := sin(elapsed * 0.22 + 0.8) * 13.0
+	draw_texture_rect(FAR, Rect2(-18.0 + far_shift, -10.0, 1956.0, 1100.0), false)
+	draw_texture_rect(MID, Rect2(-24.0 + mid_shift, -8.0, 1968.0, 1096.0), false)
+	draw_texture_rect(NEAR, Rect2(0.0, 0.0, 1920.0, 1080.0), false)
+	draw_rect(Rect2(0.0, 0.0, 1920.0, 1080.0), Color(act_color, 0.035), true)
