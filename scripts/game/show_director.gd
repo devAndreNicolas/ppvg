@@ -8,6 +8,8 @@ const HUD_SCENE := preload("res://scenes/ui/show_hud.tscn")
 const UI_NAVIGATOR_SCENE := preload("res://scenes/ui/ui_navigator.tscn")
 const NOTE_SCENE := preload("res://scenes/game/music_note.tscn")
 const MAX_NOTES := 12
+const END_FADE_OUT := 1.6
+const MENU_FADE_IN := 0.9
 
 var timeline := ShowTimeline.new()
 var beat_clock := BeatClock.new()
@@ -16,6 +18,7 @@ var player: StreetFighter
 var hud: ShowHud
 var ui
 var music: AudioStreamPlayer
+var fade_layer: ColorRect
 var rivals: Array[StreetRival] = []
 var notes: Array[MusicNote] = []
 var note_pool: Array[MusicNote] = []
@@ -48,6 +51,14 @@ func _ready() -> void:
 		add_child(note)
 	ui.z_index = 20
 	add_child(ui)
+	fade_layer = ColorRect.new()
+	fade_layer.name = "FadeLayer"
+	fade_layer.position = Vector2.ZERO
+	fade_layer.size = Vector2(1920, 1080)
+	fade_layer.color = Color(0.0, 0.0, 0.0, 0.0)
+	fade_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fade_layer.z_index = 100
+	add_child(fade_layer)
 	ui.start_requested.connect(_on_start_requested)
 	ui.restart_requested.connect(_on_restart_requested)
 	ui.main_menu_requested.connect(_on_main_menu_requested)
@@ -269,9 +280,29 @@ func _on_note_expired(note: MusicNote) -> void:
 	notes.erase(note)
 
 func _finish_show() -> void:
+	if state == "ending":
+		return
 	state = "ending"
+	ui.hide_all()
+	var fade_out := create_tween()
+	fade_out.set_trans(Tween.TRANS_SINE)
+	fade_out.set_ease(Tween.EASE_IN_OUT)
+	fade_out.tween_property(fade_layer, "color", Color.BLACK, END_FADE_OUT)
+	await fade_out.finished
 	music.stop()
-	ui.show_results(score, _rank())
+	_clear_stage()
+	player.reset_for_show()
+	player.position = Vector2(960, 770)
+	song_time = 0.0
+	fallback_time = 0.0
+	outro_started = false
+	state = "menu"
+	ui.show_main()
+	_present()
+	var fade_in := create_tween()
+	fade_in.set_trans(Tween.TRANS_SINE)
+	fade_in.set_ease(Tween.EASE_IN_OUT)
+	fade_in.tween_property(fade_layer, "color", Color(0.0, 0.0, 0.0, 0.0), MENU_FADE_IN)
 
 func _rank() -> String:
 	if crowd >= 82.0:
