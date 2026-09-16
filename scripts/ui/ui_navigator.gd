@@ -129,15 +129,12 @@ func _draw_backdrop() -> void:
 		var point := Vector2(180.0 + index * 280.0, 140.0 + fmod(float(index * 173), 700.0))
 		draw_circle(point, 60.0 + breath * 12.0, Color(UiTheme.WINE if index % 2 == 0 else UiTheme.AMBER, 0.055))
 	draw_line(Vector2(84, 84), Vector2(1836, 84), Color(UiTheme.CHROME, 0.55), 1.0)
-	draw_string(UiTheme.body_font(), Vector2(92, 58), "EDRIEL / PERDER PRA VOCE GANHAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, UiTheme.CREAM)
+	draw_string(UiTheme.body_font(), Vector2(92, 58), "EDRIEL", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, UiTheme.CREAM)
 	draw_string(UiTheme.body_font(), Vector2(0, 58), "PERDER PRA VOCE GANHAR", HORIZONTAL_ALIGNMENT_RIGHT, 1828, 17, UiTheme.AMBER)
 
 func _draw_main() -> void:
-	draw_string(UiTheme.display_font(), Vector2(280, 310), "PERDER PRA VOCE GANHAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 126, UiTheme.CREAM)
-	draw_string(UiTheme.body_font(), Vector2(288, 352), "UM CLIPE JOGAVEL", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, UiTheme.AMBER)
-	draw_string(UiTheme.body_font(), Vector2(288, 384), "PERDER PRA VOCE GANHAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UiTheme.CHROME)
-	_draw_menu_list(Rect2(1040, 286, 590, 410))
-	draw_string(UiTheme.body_font(), Vector2(288, 820), "SELECIONE COM WASD / SETAS  ·  CONFIRME COM ENTER / ESPACO", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, UiTheme.MUTED)
+	_draw_menu_list(Rect2(660, 330, 600, 410))
+	draw_string(UiTheme.body_font(), Vector2(0, 820), "WASD / SETAS PARA NAVEGAR  ·  ENTER / ESPACO PARA CONFIRMAR", HORIZONTAL_ALIGNMENT_CENTER, 1920, 15, UiTheme.MUTED)
 
 func _draw_pause() -> void:
 	_draw_center_title("PAUSA", "A MUSICA E A RODA ESTAO PARADAS")
