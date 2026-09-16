@@ -26,6 +26,22 @@ var combo_timer := 0.0
 var glow := 0.0
 var duplicate_phase := 0.0
 
+func reset_for_show() -> void:
+	reader = ComboReader.new()
+	abilities = AbilitySystem.new()
+	velocity = Vector2.ZERO
+	attack_timer = 0.0
+	attack = {}
+	attack_timing = 0.0
+	impact_fired = false
+	queued_attack = ""
+	dodge_timer = 0.0
+	hit_timer = 0.0
+	combo = 0
+	combo_timer = 0.0
+	glow = 0.0
+	queue_redraw()
+
 func tick(delta: float) -> void:
 	abilities.tick(delta)
 	combo_timer = maxf(combo_timer - delta, 0.0)

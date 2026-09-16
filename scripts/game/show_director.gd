@@ -5,6 +5,7 @@ const ARENA_SCENE := preload("res://scenes/game/street_arena.tscn")
 const PLAYER_SCENE := preload("res://scenes/actors/edriel.tscn")
 const RIVAL_SCENE := preload("res://scenes/actors/rival.tscn")
 const HUD_SCENE := preload("res://scenes/ui/show_hud.tscn")
+const UI_NAVIGATOR_SCENE := preload("res://scenes/ui/ui_navigator.tscn")
 const NOTE_SCENE := preload("res://scenes/game/music_note.tscn")
 const MAX_NOTES := 12
 
@@ -13,11 +14,12 @@ var beat_clock := BeatClock.new()
 var arena: StreetArena
 var player: StreetFighter
 var hud: ShowHud
+var ui
 var music: AudioStreamPlayer
 var rivals: Array[StreetRival] = []
 var notes: Array[MusicNote] = []
 var note_pool: Array[MusicNote] = []
-var state := "title"
+var state := "menu"
 var song_time := 0.0
 var fallback_time := 0.0
 var crowd := 55.0
@@ -31,6 +33,7 @@ func _ready() -> void:
 	arena = ARENA_SCENE.instantiate()
 	player = PLAYER_SCENE.instantiate()
 	hud = HUD_SCENE.instantiate()
+	ui = UI_NAVIGATOR_SCENE.instantiate()
 	player.position = Vector2(960, 770)
 	add_child(arena)
 	add_child(player)
@@ -43,6 +46,14 @@ func _ready() -> void:
 		note.deactivate()
 		note_pool.append(note)
 		add_child(note)
+	ui.z_index = 20
+	add_child(ui)
+	ui.start_requested.connect(_on_start_requested)
+	ui.restart_requested.connect(_on_restart_requested)
+	ui.main_menu_requested.connect(_on_main_menu_requested)
+	ui.resume_requested.connect(_on_resume_requested)
+	ui.quit_requested.connect(_on_quit_requested)
+	ui.show_main()
 	player.attack_impact.connect(_on_attack_impact)
 	player.ability_cast.connect(_on_ability_cast)
 	player.timing_judged.connect(_on_timing_judged)
@@ -78,20 +89,50 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.keycode == KEY_F3:
 		hud.toggle_diagnostics()
 		return
-	if state == "title" and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
-		_start_show()
-		return
-	if state == "ending" and event.keycode == KEY_R:
-		_reset_show()
-		return
 	if state == "playing":
 		if event.keycode == KEY_ESCAPE:
-			music.stream_paused = not music.stream_paused
+			_pause_show()
+			get_viewport().set_input_as_handled()
 		elif not music.stream_paused and not timeline.is_outro(song_time):
 			player.handle_input(event, beat_clock.quality_at(song_time), song_time, crowd)
 
+func _on_start_requested() -> void:
+	_start_show()
+
+func _on_restart_requested() -> void:
+	get_tree().paused = false
+	music.stop()
+	_clear_stage()
+	_start_show()
+
+func _on_main_menu_requested() -> void:
+	get_tree().paused = false
+	music.stop()
+	_clear_stage()
+	player.reset_for_show()
+	state = "menu"
+	ui.show_main()
+
+func _on_resume_requested() -> void:
+	get_tree().paused = false
+	music.stream_paused = false
+	ui.hide_all()
+
+func _on_quit_requested() -> void:
+	get_tree().quit()
+
+func _pause_show() -> void:
+	if state != "playing" or timeline.is_outro(song_time):
+		return
+	music.stream_paused = true
+	ui.show_pause()
+	get_tree().paused = true
+
 func _start_show() -> void:
+	player.reset_for_show()
+	player.position = Vector2(960, 770)
 	state = "playing"
+	ui.hide_all()
 	song_time = 0.0
 	fallback_time = 0.0
 	crowd = 55.0
@@ -100,17 +141,6 @@ func _start_show() -> void:
 	outro_started = false
 	music.stream_paused = false
 	music.play()
-
-func _reset_show() -> void:
-	_clear_stage()
-	player.position = Vector2(960, 770)
-	song_time = 0.0
-	fallback_time = 0.0
-	crowd = 55.0
-	score = 0
-	spawn_timer = 0.8
-	outro_started = false
-	state = "title"
 
 func _clear_stage() -> void:
 	for rival in rivals:
@@ -241,12 +271,13 @@ func _on_note_expired(note: MusicNote) -> void:
 func _finish_show() -> void:
 	state = "ending"
 	music.stop()
+	ui.show_results(score, _rank())
 
 func _rank() -> String:
 	if crowd >= 82.0:
-		return "VOCÊ TOMOU A RODA · S RANK"
+		return "VOCÊ PERDEU PRA QUE ELA GANHASSE · S RANK"
 	if crowd >= 58.0:
-		return "A RODA FICOU COM VOCÊ · A RANK"
+		return "A VITÓRIA FICOU COM VOCÊ · A RANK"
 	return "VOCÊ CHEGOU ATÉ O FIM · B RANK"
 
 func _present() -> void:
@@ -254,4 +285,6 @@ func _present() -> void:
 	var pulse := beat_clock.pulse_at(song_time)
 	arena.present(crowd, pulse, act.color)
 	var label := timing_label if timing_label_timer > 0.0 else ""
-	hud.present(state, score, player.combo, crowd, player.abilities.notes, player.abilities.grave_time, player.abilities.duplo_time, str(act.name), pulse, beat_clock.phase_at(song_time), timeline.lyric_at(song_time), label, _rank(), player.abilities.slot_states(player.combo, crowd), not timeline.is_outro(song_time))
+	var hud_state := "playing" if state == "playing" else "hidden"
+	var show_combat := state == "playing" and not timeline.is_outro(song_time)
+	hud.present(hud_state, score, player.combo, crowd, player.abilities.notes, player.abilities.grave_time, player.abilities.duplo_time, str(act.name), pulse, beat_clock.phase_at(song_time), timeline.lyric_at(song_time), label, _rank(), player.abilities.slot_states(player.combo, crowd), show_combat)

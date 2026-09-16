@@ -2,5 +2,5 @@
 
 [ext_resource type="PackedScene" path="res://scenes/game/show_director.tscn" id="1_show"]
 
-[node name="ARoda" instance=ExtResource("1_show")]
+[node name="Perder pra Você Ganhar" instance=ExtResource("1_show")]
 scale = Vector2(0.666667, 0.666667)
