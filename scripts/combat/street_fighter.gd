@@ -7,7 +7,7 @@ signal timing_judged(label: String, quality: float)
 
 const WALK_SPEED := 440.0
 const DODGE_SPEED := 1100.0
-const ARENA := Rect2(210, 505, 1500, 390)
+const ARENA := Rect2(240, 700, 1440, 230)
 
 var reader := ComboReader.new()
 var abilities := AbilitySystem.new()
@@ -204,7 +204,6 @@ func public_is_guarded() -> bool:
 	return abilities.public_guarded()
 
 func _draw() -> void:
-	var outline := Color("35e6ff").lerp(Color("ff3bac"), glow)
 	if abilities.duplo_time > 0.0:
 		var ghost_offset := Vector2(sin(duplicate_phase) * 28.0, 3.0)
 		if visual != null and visual.sprite_frames != null:
@@ -213,7 +212,5 @@ func _draw() -> void:
 			if ghost_texture != null:
 				draw_texture_rect(ghost_texture, Rect2(-81, -195, 162, 215), false, Color("8d7dff", 0.26))
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	if attack_timer > 0.0:
-		draw_arc(Vector2(42 * facing, -10), float(attack.area), -0.9, 0.9, 16, Color(attack.color, 0.60), 7.0)
 	if abilities.grave_time > 0.0:
 		draw_arc(Vector2.ZERO, 61, 0.0, TAU, 24, Color("ffad4d"), 4.0)

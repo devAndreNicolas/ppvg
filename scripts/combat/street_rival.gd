@@ -1,6 +1,8 @@
 class_name StreetRival
 extends Node2D
 
+const ARENA := Rect2(240, 700, 1440, 230)
+
 signal strike_attempt(rival: StreetRival)
 signal defeated(rival: StreetRival)
 
@@ -59,6 +61,7 @@ func tick(delta: float, target: Vector2) -> void:
 		return
 	if knockback.length() > 1.0:
 		position += knockback * delta
+		_clamp_to_arena()
 		knockback = knockback.move_toward(Vector2.ZERO, 1600.0 * delta)
 		_set_visual(&"walk")
 		queue_redraw()
@@ -75,6 +78,7 @@ func tick(delta: float, target: Vector2) -> void:
 	if difference.length() > attack_range:
 		var drift := Vector2(0.0, sin(Time.get_ticks_msec() * 0.004 + kind) * 0.25)
 		position += (difference.normalized() + drift).normalized() * speed * delta
+		_clamp_to_arena()
 		if visual != null:
 			visual.flip_h = difference.x < 0.0
 		_set_visual(&"walk")
@@ -86,6 +90,10 @@ func tick(delta: float, target: Vector2) -> void:
 	else:
 		_set_visual(&"idle")
 	queue_redraw()
+
+func _clamp_to_arena() -> void:
+	position.x = clampf(position.x, ARENA.position.x, ARENA.end.x)
+	position.y = clampf(position.y, ARENA.position.y, ARENA.end.y)
 
 func _set_visual(next_state: StringName) -> void:
 	if visual == null or visual_state == next_state:

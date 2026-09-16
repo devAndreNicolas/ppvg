@@ -174,7 +174,7 @@ func _spawn_rival(kind: int) -> void:
 	var side := -1.0 if rivals.size() % 2 == 0 else 1.0
 	rival.position = player.position + Vector2(side * (320.0 + rivals.size() * 55.0), 65.0 - rivals.size() * 60.0)
 	rival.position.x = clampf(rival.position.x, 260.0, 1660.0)
-	rival.position.y = clampf(rival.position.y, 560.0, 870.0)
+	rival.position.y = clampf(rival.position.y, 720.0, 910.0)
 	rival.strike_attempt.connect(_on_rival_strike)
 	rival.defeated.connect(_on_rival_defeated)
 	rivals.append(rival)

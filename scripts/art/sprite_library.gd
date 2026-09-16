@@ -15,7 +15,7 @@ static func player() -> SpriteFrames:
 
 
 static func rival(kind: int) -> SpriteFrames:
-	var actor := "neon_runner" if kind % 2 == 0 else "chrome_heavy"
+	var actor := "neon_striker" if kind % 2 == 0 else "chrome_heavy"
 	var root := "res://assets/enemies/%s/sprites" % actor
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
@@ -27,7 +27,8 @@ static func rival(kind: int) -> SpriteFrames:
 
 
 static func crowd(member: int) -> SpriteFrames:
-	var actor := "crowd_%s" % char(97 + posmod(member, 4))
+	var actors := ["crowd_a", "crowd_b", "crowd_c", "crowd_d", "crowd_e"]
+	var actor: String = actors[posmod(member, actors.size())]
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
 	_add_animation(frames, &"dance", "res://assets/crowd/%s/dance/%s_dance_%%02d.png" % [actor, actor], 5.0 + float(member % 3), true)
