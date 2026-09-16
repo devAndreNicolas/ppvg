@@ -86,7 +86,7 @@ func tick(delta: float, target: Vector2) -> void:
 		attack_timer = 0.38
 		cooldown = attack_cooldown + float(kind) * 0.12
 		hit_fired = false
-		_set_visual(&"attack")
+		_set_visual(&"attack", true)
 	else:
 		_set_visual(&"idle")
 	queue_redraw()
@@ -95,11 +95,13 @@ func _clamp_to_arena() -> void:
 	position.x = clampf(position.x, ARENA.position.x, ARENA.end.x)
 	position.y = clampf(position.y, ARENA.position.y, ARENA.end.y)
 
-func _set_visual(next_state: StringName) -> void:
-	if visual == null or visual_state == next_state:
+func _set_visual(next_state: StringName, restart := false) -> void:
+	if visual == null or (visual_state == next_state and not restart):
 		return
 	visual_state = next_state
 	visual.play(next_state)
+	if restart:
+		visual.set_frame_and_progress(0, 0.0)
 
 func receive_hit(direction: Vector2, power: int, timing: float) -> void:
 	health -= power

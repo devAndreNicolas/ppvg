@@ -48,6 +48,7 @@ func reset_for_show() -> void:
 	combo = 0
 	combo_timer = 0.0
 	glow = 0.0
+	_set_visual(&"idle", true)
 	queue_redraw()
 
 func tick(delta: float) -> void:
@@ -93,11 +94,13 @@ func _sync_visual() -> void:
 	else:
 		_set_visual(&"idle")
 
-func _set_visual(next_state: StringName) -> void:
-	if visual == null or visual_state == next_state:
+func _set_visual(next_state: StringName, restart := false) -> void:
+	if visual == null or (visual_state == next_state and not restart):
 		return
 	visual_state = next_state
 	visual.play(next_state)
+	if restart:
+		visual.set_frame_and_progress(0, 0.0)
 
 func handle_input(event: InputEvent, timing: float, song_time: float, crowd: float) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -160,6 +163,10 @@ func _request_attack(id: String, timing: float) -> void:
 	attack_timing = timing
 	attack_timer = float(attack.duration)
 	impact_fired = false
+	if visual != null:
+		var frame_count := visual.sprite_frames.get_frame_count(&"attack")
+		visual.sprite_frames.set_animation_speed(&"attack", float(frame_count) / attack_timer)
+	_set_visual(&"attack", true)
 
 func _request_dodge() -> void:
 	if attack_timer > 0.0 or dodge_timer > 0.0 or hit_timer > 0.0:
